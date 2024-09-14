@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        nav {
+            background-color: #444;
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        nav a:hover {
+            background-color: #555;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        input[type="text"], input[type="number"] {
+            width: 95%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Banking Application</h1>
+</header>
+
+<nav>
+    <a href="#createAccount" onclick="showSection('createAccount')">Create Account</a>
+    <a href="#getAccount" onclick="showSection('getAccount')">Get Account</a>
+    <a href="#deposit" onclick="showSection('deposit')">Deposit</a>
+    <a href="#withdraw" onclick="showSection('withdraw')">Withdraw</a>
+    <a href="#getAllAccounts" onclick="showSection('getAllAccounts')">All Accounts</a>
+    <a href="#deleteAccount" onclick="showSection('deleteAccount')">Delete Account</a>
+</nav>
+
+<!-- Create Account Section -->
+<div id="createAccount" class="container active">
+    <h2>Create Account</h2>
+    <form id="createAccountForm">
+        <input type="text" id="accountOwner" placeholder="Account Owner Name" required><br>
+        <input type="number" id="balance" placeholder="Initial Balance" required><br>
+        <button type="submit">Create Account</button>
+    </form>
+    <div id="createAccountResult" class="result"></div>
+</div>
+
+<!-- Get Account by ID Section -->
+<div id="getAccount" class="container">
+    <h2>Get Account By ID</h2>
+    <form id="getAccountForm">
+        <input type="number" id="accountId" placeholder="Account ID" required><br>
+        <button type="submit">Get Account</button>
+    </form>
+    <div id="getAccountResult" class="result"></div>
+</div>
+
+<!-- Deposit Section -->
+<div id="deposit" class="container">
+    <h2>Deposit</h2>
+    <form id="depositForm">
+        <input type="number" id="depositAccountId" placeholder="Account ID" required><br>
+        <input type="number" id="depositAmount" placeholder="Deposit Amount" required><br>
+        <button type="submit">Deposit</button>
+    </form>
+    <div id="depositResult" class="result"></div>
+</div>
+
+<!-- Withdraw Section -->
+<div id="withdraw" class="container">
+    <h2>Withdraw</h2>
+    <form id="withdrawForm">
+        <input type="number" id="withdrawAccountId" placeholder="Account ID" required><br>
+        <input type="number" id="withdrawAmount" placeholder="Withdraw Amount" required><br>
+        <button type="submit">Withdraw</button>
+    </form>
+    <div id="withdrawResult" class="result"></div>
+</div>
+
+<!-- Get All Accounts Section -->
+<div id="getAllAccounts" class="container">
+    <h2>Get All Accounts</h2>
+    <button id="getAllAccountsButton">Get All Accounts</button>
+    <div id="getAllAccountsResult" class="result"></div>
+</div>
+
+<!-- Delete Account Section -->
+<div id="deleteAccount" class="container">
+    <h2>Delete Account</h2>
+    <form id="deleteAccountForm">
+        <input type="number" id="deleteAccountId" placeholder="Account ID" required><br>
+        <button type="submit">Delete Account</button>
+    </form>
+    <div id="deleteAccountResult" class="result"></div>
+</div>
+
+<script>
+    // Function to display the selected section and hide the others
+    function showSection(sectionId) {
+        const sections = document.querySelectorAll('.container');
+        sections.forEach(section => section.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+   // Create Account
+document.getElementById('createAccountForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const accountOwner = document.getElementById('accountOwner').value;
+    const balance = document.getElementById('balance').value;
+
+    fetch('/api/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountOwner: accountOwner, balance: parseFloat(balance) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('createAccountResult').innerHTML = `Account Created: ID: ${data.id}, Owner: ${data.accountOwner}, Balance: ${data.balance}`;
+    })
+    .catch(error => {
+        document.getElementById('createAccountResult').innerHTML = `Error: ${error.message}`;
+    });
+});
+
+// Get Account by ID
+document.getElementById('getAccountForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const accountId = document.getElementById('accountId').value;
+
+    fetch(`/api/accounts/${accountId}`)
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('getAccountResult').innerHTML = `Account Details: ID: ${data.id}, Owner: ${data.accountOwner}, Balance: ${data.balance}`;
+        })
+        .catch(error => {
+            document.getElementById('getAccountResult').innerHTML = `Error: ${error.message}`;
+        });
+});
+
+// Deposit Amount
+document.getElementById('depositForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const id = document.getElementById('depositAccountId').value;
+    const amount = document.getElementById('depositAmount').value;
+
+    fetch(`/api/accounts/${id}/deposit`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: parseFloat(amount) })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('depositResult').innerHTML = `Deposited to Account: ID: ${data.id}, New Balance: ${data.balance}`;
+    })
+    .catch(error => {
+        document.getElementById('depositResult').innerHTML = `Error: ${error.message}`;
+    });
+});
+
+// Withdraw Amount
+document.getElementById('withdrawForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const id = document.getElementById('withdrawAccountId').value;
+    const amount = document.getElementById('withdrawAmount').value;
+
+    fetch(`/api/accounts/${id}/withdraw`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: parseFloat(amount) })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text); });
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('withdrawResult').innerHTML = `Withdrawn from Account: ID: ${data.id}, New Balance: ${data.balance}`;
+    })
+    .catch(error => {
+        document.getElementById('withdrawResult').innerHTML = `Error: ${error.message}`;
+    });
+});
+
+// Get All Accounts
+document.getElementById('getAllAccountsButton').addEventListener('click', function () {
+    fetch('/api/accounts')
+        .then(response => response.json())
+        .then(data => {
+            let result = "<strong>All Accounts:</strong><br>";
+            data.forEach(account => {
+                result += `ID: ${account.id}, Owner: ${account.accountOwner}, Balance: ${account.balance}<br>`;
+            });
+            document.getElementById('getAllAccountsResult').innerHTML = result;
+        })
+        .catch(error => {
+            document.getElementById('getAllAccountsResult').innerHTML = `Error: ${error.message}`;
+        });
+});
+
+// Delete Account
+document.getElementById('deleteAccountForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const accountId = document.getElementById('deleteAccountId').value;
+
+    fetch(`/api/accounts/${accountId}`, { method: 'DELETE' })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text); });
+            }
+            return response.text();
+        })
+        .then(result => {
+            document.getElementById('deleteAccountResult').innerHTML = result;
+        })
+        .catch(error => {
+            document.getElementById('deleteAccountResult').innerHTML = `Error: ${error.message}`;
+        });
+});
+
+
+</script>
+
+</body>
+</html>
